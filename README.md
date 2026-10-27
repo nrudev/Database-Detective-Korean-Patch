@@ -103,6 +103,16 @@ bash release/macos-install/install_macos.command
 
 ## 수정한 버그
 
+### 첫 메시지를 들은 뒤 재실행하면 조수가 보이지 않음
+
+첫 메시지를 듣고 조수 튜토리얼을 마치기 전에 종료하면, 원본 게임은 재실행 시
+메시지 알림을 다시 띄운다. 이때 `열기`를 누르면 메시지를 이미 들었다는 기록
+(`0Messages`) 때문에 조수를 다시 부르지 않는다.
+
+`AssistantStartupPatches`는 이 상태에서 첫 메시지 알림을 건너뛰고 기존 조수
+튜토리얼을 재개한다. 새 게임, 튜토리얼을 마친 저장, 조수 끄기 설정은 그대로 따른다.
+Windows와 macOS에 공통 적용되며 저장 파일을 직접 수정하지 않는다.
+
 ### 쿼리창·메모장에서 Enter/Shift+Enter가 줄바꿈되지 않음
 
 `TMP_InputField.OnSubmit`이 `lineType`을 보지 않고 무조건 `DeactivateInputField()`를

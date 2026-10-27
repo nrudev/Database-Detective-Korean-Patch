@@ -224,6 +224,7 @@ namespace DDKoreanPatch
             Harmony harmony = new Harmony(PluginGuid);
             harmony.PatchAll(typeof(InputFieldPatches));
             harmony.PatchAll(typeof(PopupPatches));
+            harmony.PatchAll(typeof(AssistantStartupPatches));
 
             if (PreviewAllChapters.Value)
             {
