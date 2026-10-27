@@ -1,5 +1,13 @@
 # 바뀐 것
 
+## 미배포 — macOS 호환
+
+- macOS universal BepInEx 로더를 포함하는 배포판 빌드 도구, 설치·실행 스크립트 추가.
+- macOS 게임 앱 내부의 Managed DLL 경로와 사용자 지정 빌드 경로 지원.
+- macOS에서 타건음 파일 URL이 잘못 만들어져 `Malformed URL`로 실패하는 문제 수정.
+- 동봉 글꼴을 쓰지 않을 때 macOS 기본 OS 폰트를 Apple SD Gothic Neo로 지정.
+- 기존 모드 파일 백업, 설정 보존 및 Steam 시작 옵션 안내 추가.
+
 ## v1.0.1
 
 ### 고친 버그

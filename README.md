@@ -6,7 +6,7 @@ Steam 게임 **Database Detective: Minor Crimes Division** (Thomas Hsu)의 비�
 
 BepInEx 플러그인으로 동작하며 **게임 원본 파일은 하나도 수정하지 않는다.**
 
-## 받기
+## 받기 (Windows)
 
 **[최신판 내려받기](https://github.com/krPlatypus/Database-Detective-Korean-Patch/releases/latest)**
 
@@ -19,6 +19,60 @@ BepInEx 플러그인으로 동작하며 **게임 원본 파일은 하나도 수�
 
 번역이 어색한 곳을 보시면 [이슈](https://github.com/krPlatypus/Database-Detective-Korean-Patch/issues)로
 알려 주십시오.
+
+## macOS에서 설치·실행
+
+macOS판(`copOS.app`)도 지원한다. **Windows용 `winhttp.dll`은 맥에서 로드되지 않으며,
+GitHub의 `Source code (zip)`은 실행용 패치가 아니다.** `README.md`, `src/`, `tools/`만
+게임 폴더에 복사한 상태라면 로더와 번역 번들을 별도로 설치해야 한다.
+
+macOS 호환 배포 파일은 `DDKoreanPatch-v1.0.1-macos.zip`이다.
+이 저장소에서 아래 빌드 명령으로 `release/`에 만들 수 있다. 기존 공개 v1.0.1의
+Windows 배포 파일과는 별개이며, macOS 빌드 파일이 GitHub에 게시되어 있다는 뜻은 아니다.
+
+1. 게임을 종료하고 macOS 배포 압축을 **게임 폴더 밖**에 푼다.
+2. 터미널에서 `bash "/압축을 푼 폴더/install_macos.command"`를 실행한다.
+   기본 Steam 경로를 사용하지 않으면 게임 폴더를 추가 인수로 전달한다.
+3. Steam → 게임 **속성 → 일반 → 시작 옵션**에 설치 완료 메시지의 한 줄을 넣는다.
+   형식은 아래와 같다. 사용자명과 게임 경로는 자신의 환경에 맞춘다.
+
+   ```text
+   "/Users/사용자명/Library/Application Support/Steam/steamapps/common/Database Detective/run_korean_patch.command" %command%
+   ```
+
+4. Steam의 **플레이** 버튼으로 실행한다. 게임 폴더의 `run_korean_patch.command`를
+   직접 실행해도 된다. `copOS.app`을 직접 열면 패치 없이 실행된다.
+
+macOS 로더는 **BepInEx 5.4.23.6 universal**이며 Apple Silicon에서는 네이티브로 실행한다.
+설치 프로그램은 기존 로더·플러그인을 `.ddkorean-backups/`에 백업하고, 설정과 다른 모드는
+유지한다. 게임 앱 내부, 코드 서명, 세이브 파일은 수정하지 않는다.
+시작 옵션을 비우면 Steam에서 원본 게임으로 실행할 수 있다.
+
+`BepInEx/LogOutput.log`에서 `번역 로드: UI 961개, TextAsset 41개, 패턴 27개`와
+`한글 폰트 준비 완료: neodgm.ttf`를 확인할 수 있다. 시작 화면의 `welcome detective!`처럼
+번역 대상에 포함되지 않은 일부 그림 문구는 영어로 남는다.
+
+### macOS 배포판 빌드 (개발자)
+
+Python 3.10 이상, .NET SDK 8 이상, 설치된 macOS 게임이 필요하다.
+완성된 배포판을 설치·실행하는 사용자는 Python이나 .NET이 필요 없다.
+
+```sh
+python3 tools/make_macos_release.py
+# 다른 Steam 라이브러리라면:
+python3 tools/make_macos_release.py --game-dir "/게임 폴더/Database Detective"
+# 빌드 결과를 기본 Steam 경로에 설치하는 예:
+unzip release/DDKoreanPatch-v1.0.1-macos.zip -d release/macos-install
+bash release/macos-install/install_macos.command
+```
+
+공식 배포본 두 개를 내려받아 SHA-256을 검증하고, 현재 C# 소스를 macOS 게임 DLL에 맞춰
+빌드한다. 번역 자산은 고정된 **v1.0.1 배포본**을 사용하므로 `translation/`의 후속 수정은
+자동 반영하지 않는다. 게임 DLL은 배포 압축에 포함하지 않는다.
+출력은 `release/DDKoreanPatch-v1.0.1-macos.zip`과 체크섬 파일이다.
+
+근거: [BepInEx macOS 호환 릴리스](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.6),
+[Steam 실행 옵션 안내](https://docs.bepinex.dev/articles/advanced/steam_interop.html).
 
 ---
 
@@ -93,7 +147,7 @@ OS에 설치된 폰트를 `AtlasPopulationMode.DynamicOS`로 참조해 TMP 폴�
 글리프를 필요할 때 OS에서 가져오므로 **폰트 파일을 동봉하지 않아 재배포 라이선스 문제가 없다.**
 
 기본값은 동봉한 **Neo둥근모**(`FontFile = neodgm.ttf`)다. `FontFile`이 비어 있으면
-OS에 설치된 `FontFamily` 폰트(기본 맑은 고딕)로 돌아간다. 굴림(`Gulim`)으로 바꾸면
+OS에 설치된 `FontFamily` 폰트(Windows 기본 맑은 고딕, macOS 기본 Apple SD Gothic Neo)로 돌아간다. 굴림(`Gulim`)으로 바꾸면
 게임의 Windows 95풍 UI와 잘 어울린다.
 
 ## 동봉 폰트
@@ -255,6 +309,10 @@ python tools/mark_skipped.py           # 일부러 안 옮긴 것을 이유와 �
 ```sh
 dotnet build src/DDKoreanPatch/DDKoreanPatch.csproj -c Release
 ```
+
+macOS에서는 `copOS.app/Contents/Resources/Data/Managed`, Windows에서는
+`copOS_Data/Managed`를 참조한다. 기본 경로와 다르면 `-p:GameDir="게임 폴더"`를 붙인다.
+`-p:ManagedDir="Managed 폴더"`, `-p:BepInExCore="BepInEx/core 폴더"`로 각각 지정할 수도 있다.
 
 `<게임폴더>/BepInEx/plugins/DDKoreanPatch/` 에 아래를 넣는다.
 

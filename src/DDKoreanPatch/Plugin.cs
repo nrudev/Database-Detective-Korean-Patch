@@ -80,8 +80,9 @@ namespace DDKoreanPatch
             FontFamily = Config.Bind(
                 "Font",
                 "FontFamily",
-                "Malgun Gothic",
-                "한글 글리프를 가져올 OS 폰트 이름. 예: Malgun Gothic(맑은 고딕), Gulim(굴림), Batang(바탕).\n"
+                UnityEngine.Application.platform == UnityEngine.RuntimePlatform.OSXPlayer
+                    ? "Apple SD Gothic Neo" : "Malgun Gothic",
+                "한글 글리프를 가져올 OS 폰트 이름. 예: Apple SD Gothic Neo(macOS), Malgun Gothic(맑은 고딕), Gulim(굴림), Batang(바탕).\n"
                 + "굴림은 게임의 Windows 95풍 UI와 잘 어울립니다.");
 
             FontStyle = Config.Bind(
