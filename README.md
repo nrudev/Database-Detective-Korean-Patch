@@ -37,11 +37,15 @@ Windows 배포 파일과는 별개이며, macOS 빌드 파일이 GitHub에 게�
    형식은 아래와 같다. 사용자명과 게임 경로는 자신의 환경에 맞춘다.
 
    ```text
-   "/Users/사용자명/Library/Application Support/Steam/steamapps/common/Database Detective/run_korean_patch.command" %command%
+   "/Users/사용자명/Library/Application Support/Steam/steamapps/common/Database Detective/DDKoreanPatch.app" %command%
    ```
 
-4. Steam의 **플레이** 버튼으로 실행한다. 게임 폴더의 `run_korean_patch.command`를
+4. Steam의 **플레이** 버튼으로 실행한다. 게임 폴더의 `DDKoreanPatch.app`을
    직접 실행해도 된다. `copOS.app`을 직접 열면 패치 없이 실행된다.
+
+macOS 27의 Steam에서 스크립트를 시작 옵션으로 직접 지정하면 `OS Error 0`으로 실행이
+실패하는 경우가 있어, 별도의 universal 앱 실행기를 사용한다. 이 앱이 같은 폴더의
+`run_korean_patch.command`를 호출한다. 기존 `.command` 파일도 터미널에서 직접 실행할 수 있다.
 
 macOS 로더는 **BepInEx 5.4.23.6 universal**이며 Apple Silicon에서는 네이티브로 실행한다.
 설치 프로그램은 기존 로더·플러그인을 `.ddkorean-backups/`에 백업하고, 설정과 다른 모드는
@@ -54,8 +58,8 @@ macOS 로더는 **BepInEx 5.4.23.6 universal**이며 Apple Silicon에서는 네�
 
 ### macOS 배포판 빌드 (개발자)
 
-Python 3.10 이상, .NET SDK 8 이상, 설치된 macOS 게임이 필요하다.
-완성된 배포판을 설치·실행하는 사용자는 Python이나 .NET이 필요 없다.
+macOS, Xcode Command Line Tools, Python 3.10 이상, .NET SDK 8 이상, 설치된 macOS 게임이 필요하다.
+완성된 배포판을 설치·실행하는 사용자는 개발 도구가 필요 없다.
 
 ```sh
 python3 tools/make_macos_release.py

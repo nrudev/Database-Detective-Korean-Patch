@@ -3,10 +3,11 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
-from make_macos_release import extract
+from make_macos_release import extract, build_launcher
 from make_release import game_dir
 import zipfile
 
@@ -26,6 +27,7 @@ class MacOSPackagingTests(unittest.TestCase):
         (managed / "Scripts.dll").touch()
         self.plugin = "BepInEx/plugins/DDKoreanPatch"
         for name in ("run_bepinex.sh", "libdoorstop.dylib", "BepInEx/core/BepInEx.dll",
+                     "DDKoreanPatch.app/Contents/Info.plist", "DDKoreanPatch.app/Contents/MacOS/DDKoreanPatch",
                      "BepInEx/core/BepInEx.Preloader.dll", f"{self.plugin}/DDKoreanPatch.dll",
                      f"{self.plugin}/translation.json", f"{self.plugin}/fonts/neodgm.ttf",
                      f"{self.plugin}/fonts/LICENSE.txt"):
@@ -62,9 +64,20 @@ class MacOSPackagingTests(unittest.TestCase):
         self.assertEqual(backups[0].read_text(), "old")
         self.assertEqual((self.game / "BepInEx/config/custom.cfg").read_text(), "user settings")
         self.assertEqual((self.game / "BepInEx/plugins/OtherMod.dll").read_text(), "other mod")
-        self.assertIn(f'"{self.game}/run_korean_patch.command" %command%', result.stdout)
+        self.assertIn(f'"{self.game}/DDKoreanPatch.app" %command%', result.stdout)
         self.assertTrue(os.access(self.game / "run_korean_patch.command", os.X_OK))
         self.assertEqual(self.install().returncode, 0)
+
+    @unittest.skipUnless(sys.platform == "darwin" and shutil.which("xcrun"), "macOS 빌드 도구 필요")
+    def test_native_app_launcher_forwards_arguments(self):
+        build_launcher(self.root)
+        script = self.root / "run_korean_patch.command"
+        script.write_text('#!/bin/bash\nprintf "%s\\n" "$@"\n')
+        executable = self.root / "DDKoreanPatch.app/Contents/MacOS/DDKoreanPatch"
+        for arguments in ([], [str(self.game / "copOS.app"), "--test", "한글 two words"]):
+            result = subprocess.run([str(executable), *arguments], cwd="/", capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout.splitlines(), arguments or [""])
 
     def test_incomplete_payload_does_not_install(self):
         (self.payload / self.plugin / "fonts/neodgm.ttf").unlink()

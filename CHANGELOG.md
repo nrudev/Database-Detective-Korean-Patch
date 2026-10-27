@@ -2,6 +2,8 @@
 
 ## 미배포 — macOS 호환
 
+- Steam/macOS 27에서 스크립트 시작 옵션이 `OS Error 0`으로 실패하는 문제를
+  별도의 universal 앱 실행기(`DDKoreanPatch.app`)로 해결.
 - macOS universal BepInEx 로더를 포함하는 배포판 빌드 도구, 설치·실행 스크립트 추가.
 - macOS 게임 앱 내부의 Managed DLL 경로와 사용자 지정 빌드 경로 지원.
 - macOS에서 타건음 파일 URL이 잘못 만들어져 `Malformed URL`로 실패하는 문제 수정.

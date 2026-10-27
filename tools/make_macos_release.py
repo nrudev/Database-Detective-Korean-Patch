@@ -7,8 +7,10 @@ python3 tools/make_macos_release.py [--game-dir GAME] [--dotnet DOTNET]
 import argparse
 import hashlib
 from pathlib import Path
+import plistlib
 import shutil
 import subprocess
+import sys
 import tempfile
 import zipfile
 
@@ -59,11 +61,36 @@ def extract(archive, target, plugin_only=False):
             zf.extract(entry, target)
 
 
+def build_launcher(stage):
+    app = stage / "DDKoreanPatch.app"
+    executable = app / "Contents/MacOS/DDKoreanPatch"
+    executable.parent.mkdir(parents=True)
+    subprocess.run([
+        "xcrun", "clang", "-arch", "arm64", "-arch", "x86_64",
+        "-mmacosx-version-min=12.0", "-Wall", "-Wextra", "-Werror",
+        str(ROOT / "tools/macos_launcher.c"), "-o", str(executable),
+    ], check=True)
+    (app / "Contents/Info.plist").write_bytes(plistlib.dumps({
+        "CFBundleExecutable": "DDKoreanPatch",
+        "CFBundleIdentifier": "kr.spade.databasedetective.koreanlauncher",
+        "CFBundleName": "Database Detective Korean Patch",
+        "CFBundlePackageType": "APPL",
+        "CFBundleVersion": "1",
+        "CFBundleShortVersionString": "1.0.1",
+        "LSMinimumSystemVersion": "12.0",
+        "LSUIElement": True,
+    }))
+    subprocess.run(["codesign", "--force", "--sign", "-", str(app)], check=True)
+    subprocess.run(["codesign", "--verify", str(app)], check=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--game-dir", type=Path, default=DEFAULT_GAME)
     parser.add_argument("--dotnet", default="dotnet", help=".NET SDK 실행 파일")
     args = parser.parse_args()
+    if sys.platform != "darwin" or not shutil.which("xcrun"):
+        parser.error("앱 실행기를 빌드하려면 macOS와 Xcode Command Line Tools가 필요합니다.")
     managed = args.game_dir.expanduser().resolve() / "copOS.app/Contents/Resources/Data/Managed"
     if not (managed / "Scripts.dll").is_file():
         parser.error(f"macOS 게임의 Managed 폴더가 없습니다: {managed}")
@@ -89,6 +116,7 @@ def main():
         shutil.copy2(ROOT / "packaging/NOTICE.txt", stage / "NOTICE.txt")
         for name in ("run_bepinex.sh", "run_korean_patch.command", "install_macos.command"):
             (stage / name).chmod(0o755)
+        build_launcher(stage)
 
         output = RELEASE / "DDKoreanPatch-v1.0.1-macos.zip"
         with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as zf:
