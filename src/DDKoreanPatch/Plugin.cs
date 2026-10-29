@@ -249,6 +249,7 @@ namespace DDKoreanPatch
             {
                 Translator.Load(PluginDirectory);
                 harmony.PatchAll(typeof(TranslationPatches));
+                harmony.PatchAll(typeof(MessageTitlePatches));
                 harmony.PatchAll(typeof(AssistantDialoguePatches));
                 harmony.PatchAll(typeof(BrokerPagePatches));
             }

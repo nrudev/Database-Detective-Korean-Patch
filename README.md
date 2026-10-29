@@ -52,13 +52,15 @@ macOS 로더는 **BepInEx 5.4.23.6 universal**이며 Apple Silicon에서는 네�
 유지한다. 게임 앱 내부, 코드 서명, 세이브 파일은 수정하지 않는다.
 시작 옵션을 비우면 Steam에서 원본 게임으로 실행할 수 있다.
 
-`BepInEx/LogOutput.log`에서 `번역 로드: UI 961개, TextAsset 41개, 패턴 27개`와
+현재 소스로 빌드한 패치는 `BepInEx/LogOutput.log`에서
+`번역 로드: UI 1088개, TextAsset 41개, 패턴 126개`와
 `한글 폰트 준비 완료: neodgm.ttf`를 확인할 수 있다. 시작 화면의 `welcome detective!`처럼
 번역 대상에 포함되지 않은 일부 그림 문구는 영어로 남는다.
 
 ### macOS 배포판 빌드 (개발자)
 
-macOS, Xcode Command Line Tools, Python 3.10 이상, .NET SDK 8 이상, 설치된 macOS 게임이 필요하다.
+macOS, Xcode Command Line Tools, Python 3.10 이상과 UnityPy, .NET SDK 8 이상,
+설치된 macOS 게임이 필요하다.
 완성된 배포판을 설치·실행하는 사용자는 개발 도구가 필요 없다.
 
 ```sh
@@ -71,8 +73,10 @@ bash release/macos-install/install_macos.command
 ```
 
 공식 배포본 두 개를 내려받아 SHA-256을 검증하고, 현재 C# 소스를 macOS 게임 DLL에 맞춰
-빌드한다. 번역 자산은 고정된 **v1.0.1 배포본**을 사용하므로 `translation/`의 후속 수정은
-자동 반영하지 않는다. 게임 DLL은 배포 압축에 포함하지 않는다.
+빌드한다. 그림·폰트·음원은 고정된 **v1.0.1 배포본**을 사용한다.
+텍스트는 설치된 게임에서 원문을 읽고 현재 `translation/`으로 다시 묶어 반영한다.
+대사는 이름과 원문 SHA-256으로 연결하며, 검수하지 않은 원문 변경은 빌드를 중단한다.
+게임 DLL은 배포 압축에 포함하지 않는다.
 출력은 `release/DDKoreanPatch-v1.0.1-macos.zip`과 체크섬 파일이다.
 
 근거: [BepInEx macOS 호환 릴리스](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.6),
@@ -231,6 +235,12 @@ python tools/make_templates.py    # 번역 템플릿 생성 -> translation/
 python tools/build_translation.py # dist/translation.json 으로 묶기
 ```
 
+추출 도구에는 `UnityPy`, UI 구조 추출에는 `TypeTreeGeneratorAPI`가 필요하다.
+macOS의 기본 Steam 경로를 자동으로 찾으며, 다른 경로는 `DDKOREAN_GAME_DIR` 환경 변수로 지정한다.
+`dynamic.json`의 `{0}`, `{1}` 문장은 빌드 시 정규식으로도 변환하므로 실제 값이
+들어간 오류 메시지에도 적용된다. 값 자체와 SQL 식별자는 그대로 유지한다.
+게임 업데이트로 TextAsset 번호가 달라져도 원문 해시가 같으면 기존 번역에 연결한다.
+
 화면에 찍히는 문자열이 코드 안에 박혀 있는 것도 많다. 생김새로 짐작하면 테이블 이름까지
 딸려 오므로, **호출 지점을 보고** 고른다 (`SetText`, `CreateQuestionAnswer`,
 `GetHelpWrapper`, `Launch*Popup` 등).
@@ -308,6 +318,18 @@ python tools/rewrap_hints.py           # 힌트의 줄 수를 원문에 맞추�
 python tools/locate_text.py            # 번역한 문구가 게임 안 어느 쪽에 나오는지
 python tools/mark_skipped.py           # 일부러 안 옮긴 것을 이유와 함께 적어 두기
 ```
+
+번역 빌드 회귀 검사: `python -m unittest discover -s tools -p 'test_*.py'`.
+게임과 .NET SDK가 있으면 아래 명령으로 실제 번역기와 제목 비교 패치도 검사한다.
+테스트는 게임을 실행하거나 저장 파일을 변경하지 않는다.
+
+```sh
+python tools/build_translation.py
+dotnet run --project tests/runtime/TranslationChecks.csproj -- "$PWD"
+```
+
+기본 참조 경로는 macOS Steam 설치 폴더다. 다른 환경에서는 `-p:Game="게임 폴더"`와
+`-p:Managed="Managed 폴더"`를 `--` 앞에 지정한다.
 
 `locate_text.py`는 TMP 컴포넌트에서 부모를 타고 올라가 주소처럼 생긴 프리팹 이름을
 찾는다. 웹 화면은 프리팹 하나가 한 쪽이라 그 이름이 곧 주소다.
@@ -455,8 +477,8 @@ python tools/import_sheet.py 받은표.csv            # 제자리에 도로 넣�
 
 | 갈래 | 상태 |
 |---|---|
-| UI 문자열 (`ui.json`) | 886개 중 752개. 남긴 134개는 테이블명 등 일부러 둔 것 |
-| 코드 조립 문자열 (`dynamic.json`) | 214개 |
+| UI 문자열 (`ui.json`) | 886개 중 748개에 값이 있음. 빈 138개는 의도적인 원문 유지이며, 채운 값에도 고유명사 등 원문 유지 항목이 포함됨 |
+| 코드 조립 문자열 (`dynamic.json`) | 341개. 기존 214개에 127개 추가 |
 | TextAsset (대사·힌트·웹페이지) | 41개 |
 | 사진 단서 그림 | 21장 (+ 글자 없는 그림은 원본 유지) |
 | 사용 설명서 | **23쪽 전부** |

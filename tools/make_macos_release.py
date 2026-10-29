@@ -1,8 +1,8 @@
-"""공식 macOS 로더·v1.0.1 번역 자산과 현재 소스로 macOS 배포판을 만든다.
+"""공식 macOS 로더·v1.0.1 그림/폰트/음원과 현재 번역·소스로 macOS 배포판을 만든다.
 
 python3 tools/make_macos_release.py [--game-dir GAME] [--dotnet DOTNET]
 게임 파일은 참조만 하며 압축에 포함하지 않는다. 게임 폴더에 설치하지 않는다.
-번역 자산은 고정된 v1.0.1 배포본을 사용한다 (translation/ 재빌드 아님).
+텍스트는 설치된 게임 원문과 translation/을 대조하여 다시 빌드한다 (UnityPy 필요).
 """
 import argparse
 import hashlib
@@ -84,6 +84,16 @@ def build_launcher(stage):
     subprocess.run(["codesign", "--verify", str(app)], check=True)
 
 
+def build_current_translation(game):
+    import common
+    from extract_text import extract_text_assets
+    from build_translation import build
+
+    common.DATA_DIR = str(game / "copOS.app/Contents/Resources/Data")
+    originals, _ = extract_text_assets()
+    return Path(build(original_records=originals))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--game-dir", type=Path, default=DEFAULT_GAME)
@@ -98,11 +108,13 @@ def main():
         parser.error(".NET SDK가 필요합니다. dotnet을 설치하거나 --dotnet 경로를 지정하세요.")
 
     archives = [download(*entry) for entry in DOWNLOADS]
+    translation = build_current_translation(args.game_dir.expanduser().resolve())
     RELEASE.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="macos-build-", dir=RELEASE) as temp:
         stage = Path(temp)
         extract(archives[0], stage)
         extract(archives[1], stage, plugin_only=True)
+        shutil.copy2(translation, stage / "BepInEx/plugins/DDKoreanPatch/translation.json")
         subprocess.run([
             args.dotnet, "build", str(ROOT / "src/DDKoreanPatch/DDKoreanPatch.csproj"),
             "-c", "Release", "--nologo",
